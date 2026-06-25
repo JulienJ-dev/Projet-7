@@ -1,5 +1,4 @@
 import csv
-from itertools import combinations
 from pathlib import Path
 
 
@@ -16,16 +15,18 @@ def read_actions(file_path):
 
         for row in reader:
             name = row[0]
-            price = float(row[1])
+            price = int(float(row[1]))
             profit_percent = float(row[2].replace("%", ""))
-            profit = price * profit_percent / 100
+
+            if price <= 0 or profit_percent <= 0:
+                continue
 
             actions.append(
                 {
                     "name": name,
                     "price": price,
                     "profit_percent": profit_percent,
-                    "profit": profit,
+                    "profit": price * profit_percent / 100,
                 }
             )
 
@@ -33,22 +34,25 @@ def read_actions(file_path):
 
 
 def find_best_investment(actions):
-    best_combination = []
-    best_profit = 0
-    best_cost = 0
+    best_profits = [0] * (MAX_BUDGET + 1)
+    best_combinations = [()] * (MAX_BUDGET + 1)
 
-    
-    for number_of_actions in range(1, len(actions) + 1):
-        for combination in combinations(actions, number_of_actions):
-            total_cost = sum(action["price"] for action in combination)
+    for action in actions:
+        action_price = action["price"]
 
-            if total_cost <= MAX_BUDGET:
-                total_profit = sum(action["profit"] for action in combination)
+        for budget in range(MAX_BUDGET, action_price -1, -1):
+            remaining_budget = budget - action_price
+            new_profit = best_profits[remaining_budget] + action["profit"]
 
-                if total_profit > best_profit:
-                    best_combination = combination
-                    best_profit = total_profit
-                    best_cost = total_cost
+            if new_profit > best_profits[budget]:
+                best_profits[budget] = new_profit
+                best_combinations[budget] = (best_combinations[remaining_budget] + (action,))
+            #print(best_profits)
+
+    best_budget = max(range(MAX_BUDGET + 1), key=lambda budget: best_profits[budget],)
+    best_combination = best_combinations[best_budget]
+    best_cost = sum(action["price"] for action in best_combination)
+    best_profit = best_profits[best_budget]
 
     return best_combination, best_cost, best_profit
 
@@ -57,14 +61,10 @@ def display_result(best_combination, best_cost, best_profit):
     print("Meilleur investissement :")
 
     for action in best_combination:
-        print(
-            f"- {action['name']} : "
-            f"{action['price']:.2f} euros, "
-            f"{action['profit_percent']:.2f}% de benefice"
-        )
+        print(f"- {action['name']} : {action['price']} euros, {action['profit_percent']:.2f}% de benefice")
 
     print()
-    print(f"Cout total : {best_cost:.2f} euros")
+    print(f"Cout total : {best_cost} euros")
     print(f"Benefice total apres 2 ans : {best_profit:.2f} euros")
 
 
