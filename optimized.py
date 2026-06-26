@@ -2,8 +2,8 @@ import csv
 from pathlib import Path
 
 
-MAX_BUDGET = 500
-CSV_FILE = "Liste+d'actions+-+P7+Python+-+Feuille+1 (1).csv"
+MAX_BUDGET = 30
+CSV_FILE = "data/Liste+d'actions+-+P7+Python+-+Feuille+1 (1).csv"
 
 
 def read_actions(file_path):
